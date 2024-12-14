@@ -6,15 +6,15 @@ from models import Student, Subject, StudentGrade, Group, Teacher
 
 
 def select_1():
+    student_columns = [Student.id, Student.first_name, Student.last_name]
+
     stmt = (
         select(
-            Student.id,
-            Student.first_name,
-            Student.last_name,
+            *student_columns,
             func.avg(StudentGrade.grade).label("grade_avg"),
         )
         .join(Student)
-        .group_by(StudentGrade.student_id)
+        .group_by(*student_columns)
         .order_by(func.avg(StudentGrade.grade).desc())
         .limit(5)
     )
@@ -22,16 +22,16 @@ def select_1():
 
 
 def select_2(subject: Subject):
+    student_columns = [Student.id, Student.first_name, Student.last_name]
+
     stmt = (
         select(
-            Student.id,
-            Student.first_name,
-            Student.last_name,
+            *student_columns,
             func.avg(StudentGrade.grade).label("grade_avg"),
         )
         .join(Student)
         .where(StudentGrade.subject_id == subject.id)
-        .group_by(StudentGrade.student_id)
+        .group_by(*student_columns)
         .order_by(func.avg(StudentGrade.grade).desc())
         .limit(1)
     )
@@ -49,6 +49,7 @@ def select_3(subject: Subject):
         .join(Student.grades)
         .where(StudentGrade.subject_id == subject.id)
         .group_by(Group.id)
+        .order_by(Group.id)
     )
     return session.execute(stmt).mappings().all()
 
@@ -94,33 +95,38 @@ def select_7(group: Group, subject: Subject):
 
 
 def select_8(teacher: Teacher):
+    teacher_columns = [Teacher.id, Teacher.first_name, Teacher.last_name]
+
     stmt = (
         select(
-            Teacher.id,
-            Teacher.first_name,
-            Teacher.last_name,
+            *teacher_columns,
             func.avg(StudentGrade.grade).label("grade_avg"),
         )
         .join(Teacher)
         .where(StudentGrade.teacher_id == teacher.id)
-        .group_by(StudentGrade.teacher_id)
+        .group_by(*teacher_columns)
     )
     return session.execute(stmt).mappings().all()
 
 
 def select_9(student: Student):
+    subject_columns = [Subject.id, Subject.name]
+
     stmt = (
-        select(Subject.id, Subject.name)
+        select(*subject_columns)
         .join(StudentGrade)
         .where(StudentGrade.student_id == student.id)
-        .group_by(StudentGrade.subject_id)
+        .group_by(*subject_columns)
+        .order_by(Subject.id)
     )
     return session.execute(stmt).mappings().all()
 
 
 def select_10(student: Student, teacher: Teacher):
+    subject_columns = [Subject.id, Subject.name]
+
     stmt = (
-        select(Subject.id, Subject.name)
+        select(*subject_columns)
         .join(StudentGrade)
         .where(
             and_(
@@ -128,7 +134,8 @@ def select_10(student: Student, teacher: Teacher):
                 StudentGrade.teacher_id == teacher.id,
             )
         )
-        .group_by(StudentGrade.subject_id)
+        .group_by(*subject_columns)
+        .order_by(Subject.id)
     )
     return session.execute(stmt).mappings().all()
 
